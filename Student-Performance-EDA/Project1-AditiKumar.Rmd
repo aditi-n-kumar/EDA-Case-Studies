@@ -1,0 +1,147 @@
+---
+title: "Project1"
+author: "Aditi Kumar"
+date: "2025-10-29"
+output: pdf_document
+---
+
+# Introduction
+NOTE: After recording the video, I updated the report to include more descriptive captions and explanations for each graph to improve clarity.
+
+In this project, I analyzed the Student Performance dataset from the UCI Machine Learning Repository.  
+The goal is to explore how different factors such as like study time, health, and family background, affect students’ grades.
+
+Dataset Source: UCI Machine Learning Repository, Student Performance dataset (Portuguese secondary school students). 
+Source Link: https://archive.ics.uci.edu/dataset/320/student+performance
+
+
+```{r setup, include=FALSE}
+# Load libraries
+library(dplyr)
+library(ggplot2)
+library(corrplot)
+
+# load cleaned dataset
+df <- readRDS("student_clean.rds")
+
+# overview
+glimpse(df)
+summary(df)
+```
+
+# 1. Grade Distribution
+First, I wanted to check what the distribution of average grades are for all students.
+```{r avgGradesDist, echo=TRUE}
+ggplot(df, aes(x = avg_grade)) +
+geom_histogram(bins = 30, fill = "skyblue", color = "black") +
+labs(title = "Distribution of Average Grades", x = "Average Grade", y = "Count")
+```
+We can see how most students scored around the middle range, with fewer students at the extremes.
+
+
+# 2. Average Grades by Gender
+Next, I compared the average grade between male and female students.
+```{r avgGradesGen, echo=TRUE}
+ggplot(df, aes(x = sex, y = avg_grade, fill = sex)) +
+geom_boxplot() +
+labs(title = "Average Grade by Gender", x = "Gender", y = "Average Grade")
+
+```
+This shows whether gender has a clear impact on grades, but usually, the difference is small.
+
+
+# 3. Study Time vs Average Grades
+Third, I checked if students who study more tend to have better grades.
+```{r studyTimeVSavgGrades, echo=TRUE}
+ggplot(df, aes(x = factor(studytime), y = avg_grade)) +
+geom_boxplot(fill = "lightgreen") +
+labs(title = "Study Time vs Average Grade", x = "Study Time Category", y = "Average Grade")
+
+```
+We can see that longer study times generally lead to better grade averages. 
+
+
+# 4. Absences vs Average Grades
+Here, I checked to see if students who miss more classes tend to have lower average grades.
+```{r absences, echo=TRUE}
+ggplot(df, aes(x = absences, y = avg_grade)) +
+geom_point(color = "tomato", alpha = 0.6) +
+geom_smooth(method = "lm", se = TRUE, color = "blue") +
+labs(title = "Relationship Between Absences and Average Grade",
+x = "Number of Absences",
+y = "Average Grade")
+```
+From this, we can see the general trend, as the number of absences goes up, the average grade usually goes down. 
+
+# 5. Correlation
+Next, I looked at correlations between all numeric variables to see which factors might influence performance.
+```{r correlation, echo=TRUE}
+# pick only numeric columns
+num_vars <- df[, sapply(df, is.numeric)]
+corr_matrix <- cor(num_vars, use = "complete.obs")
+
+# plot 
+corrplot(corr_matrix, method = "color", tl.col = "black", tl.cex = 0.8)
+
+
+```
+Darker colors show stronger relationships. For example, between G1, G2, and G3 grades.
+
+
+
+
+
+
+#6. Parent's Education vs Average Grades
+I also checked if having school support or a mother with higher education makes a difference in grades.
+```{r summaries, echo=TRUE}
+# average grade by school support
+school_support_avg <- aggregate(avg_grade ~ schoolsup, data = df, FUN = mean)
+print(school_support_avg)
+
+# average grade by mother's education
+mother_edu_avg <- aggregate(avg_grade ~ Medu, data = df, FUN = mean)
+print(mother_edu_avg)
+
+
+```
+We can see the average grade differences for each group.
+
+
+
+
+# 7. Linear Model
+Finally, I built a simple linear model to predict the average grade using selected variables.
+```{r model1, echo=TRUE}
+# Predict average grade using selected variables
+
+model <- lm(avg_grade ~ studytime + failures + absences + health + sex, data = df)
+summary(model)
+
+```
+This shows which variables are most important for predicting student performance.
+
+
+
+
+# 8. 
+I checked diagnostic plots to see if the model fits the data well.
+```{r model2, echo=TRUE}
+# Predict average grade using selected variables
+
+par(mfrow = c(2,2))
+plot(model)
+
+```
+
+# 9. 
+Conclusion
+```{r conclusion, echo=FALSE}
+# Predict average grade using selected variables
+
+cat("Overall, students with higher study time and fewer failures tended to have better average grades.
+Health and absences also showed some effect, but gender and school support were less important.")
+
+
+
+```
